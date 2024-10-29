@@ -375,6 +375,14 @@ section h2::after {
     height: 1ch;
 }
 
+.disable-switching-pages {
+    cursor: auto;
+}
+
+.enable-switching-pages {
+    cursor: pointer;
+}
+
 #products-img-footer {
     text-align: center;
 }

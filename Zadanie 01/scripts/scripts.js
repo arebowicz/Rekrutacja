@@ -290,7 +290,11 @@ window.onload = function () {
         modifyNumOfPages(Math.floor(DB_NUM_OF_ITEMS / newItemsPerPage) + (DB_NUM_OF_ITEMS % newItemsPerPage ? 1 : 0));
     }
 
-    function reloadProducts(newItemsPerPage, ifResizingTable, fromLastPageToLeft) {
+    function styleGridArea(index, row, column) {
+        document.querySelector('#grid-products-wrapper').children[index].style.gridArea = `${row} / ${column}`;
+    }
+
+    function reloadProducts(newItemsPerPage, ifResizingTable, fromLastPageToTheLeft) {
         if (ifResizingTable) {
             let oldItemsPerPage = itemsPerPage;
             let oldPageNum = pageNumber;
@@ -308,18 +312,25 @@ window.onload = function () {
                         products.removeChild(products.lastChild);
                     }
                     if (itemsPerPage == 2 && document.documentElement.clientWidth >= 1200) {
-                        document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 2';
+                        styleGridArea(0, 1, 2);
                         if (document.querySelector('#grid-products-wrapper').children.length == 2) {
-                            document.querySelector('#grid-products-wrapper').children[1].style.gridArea = '1 / 3';
+                            styleGridArea(1, 1, 3);
                         }
                     }
                  }, 500);
             } else {
+                console.log('im here');
                 let firstIndex = (oldPageNum - 1) * oldItemsPerPage + 1;
                 loadNewProducts(firstIndex, oldItemsPerPage);
+                if ((DB_NUM_OF_ITEMS - firstIndex) < 2 && document.documentElement.clientWidth >= 1200) {
+                    styleGridArea(0, 1, 2);
+                    if (DB_NUM_OF_ITEMS - firstIndex == 1) {
+                        styleGridArea(1, 1, 3);
+                    }
+                }
             }
         } else {    // logic only for changing page of products
-            if (fromLastPageToLeft) {
+            if (fromLastPageToTheLeft) {
                 for (let i = 1; i <= (DB_NUM_OF_ITEMS - (pageNumber * itemsPerPage)); i++) {
                     products.children[i-1].classList.remove('appear-with-opacity');
                     products.children[i-1].classList.add('hide-with-opacity');
@@ -337,15 +348,15 @@ window.onload = function () {
                 }
                 loadNewProducts((pageNumber - 1) * itemsPerPage + 1, 0);
                 if (itemsPerPage == 2 && document.documentElement.clientWidth >= 1200) {
-                    document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 2';
+                    styleGridArea(0, 1, 2);
                     if (document.querySelector('#grid-products-wrapper').children.length == 2) {
-                        document.querySelector('#grid-products-wrapper').children[1].style.gridArea = '1 / 3';
+                        styleGridArea(1, 1, 3);
                     }
                 } else if ((DB_NUM_OF_ITEMS - ((pageNumber - 1) * itemsPerPage)) == 1 && document.documentElement.clientWidth >= 1200) {
-                    document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 2';
+                    styleGridArea(0, 1, 2);
                 } else if ((DB_NUM_OF_ITEMS - ((pageNumber - 1) * itemsPerPage)) == 2 && document.documentElement.clientWidth >= 1200) {
-                    document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 2';
-                    document.querySelector('#grid-products-wrapper').children[1].style.gridArea = '1 / 3';
+                    styleGridArea(0, 1, 2);
+                    styleGridArea(1, 1, 3);
                 }
             }, 500);
         }
@@ -354,10 +365,10 @@ window.onload = function () {
     function twoCenteredGridItemsAssistant(newItemsPerPage) {
         if (itemsPerPage == 2 && document.documentElement.clientWidth >= 1200) {
             if (DB_NUM_OF_ITEMS == 1) {
-                document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 2';
+                styleGridArea(0, 1, 2);
             } else if (DB_NUM_OF_ITEMS == 2) {
-                document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 2';
-                document.querySelector('#grid-products-wrapper').children[1].style.gridArea = '1 / 3';
+                styleGridArea(0, 1, 2);
+                styleGridArea(1, 1, 3);
             } else if (DB_NUM_OF_ITEMS > 2) {
                 let indexOfPair = (pageNumber - 1) * itemsPerPage + 1;
                 let newPageNumber = Math.floor(indexOfPair / newItemsPerPage) + 1;
@@ -365,9 +376,9 @@ window.onload = function () {
                 let itemsBeforePair = (indexOfPair - firstIndex) % newItemsPerPage;
                 let firstItemRow = Math.floor((itemsBeforePair + 1) / 4) + 1;
                 let firstItemColumn = itemsBeforePair % 4 + 1;
-                document.querySelector('#grid-products-wrapper').children[0].style.gridArea = `${firstItemRow} / ${firstItemColumn}`;
+                styleGridArea(0, firstItemRow, firstItemColumn);
                 if (document.querySelector('#grid-products-wrapper').children.length == 2) {
-                    document.querySelector('#grid-products-wrapper').children[1].style.gridArea = `${firstItemRow} / ${firstItemColumn + 1}`;
+                    styleGridArea(1, firstItemRow, firstItemColumn + 1);
                 }
             }
         }
@@ -395,19 +406,39 @@ window.onload = function () {
         }
     });
 
+    let clickableToRight = true;
+    let clickableToLeft = true;
+
     document.querySelector('#pages-left-icon').addEventListener('click', (event) => {
-        if (pageNumber > 1) {
-            modifyPageNumber(--pageNumber);
-            reloadProducts(itemsPerPage, false, true);
+        if (clickableToLeft) {
+            clickableToLeft = false;
+            if (pageNumber > 1) {
+                if (pageNumber * itemsPerPage >= DB_NUM_OF_ITEMS) { // last page
+                    modifyPageNumber(--pageNumber);
+                    reloadProducts(itemsPerPage, false, true);
+                } else {
+                    modifyPageNumber(--pageNumber);
+                    reloadProducts(itemsPerPage, false, false);
+                }
+            }
+            setTimeout(function() {
+                clickableToLeft = true;
+            }, 1000);
         }
     });
 
     document.querySelector('#pages-right-icon').addEventListener('click', (event) => {
-        let lastPageNum = Math.floor(DB_NUM_OF_ITEMS / itemsPerPage);
-        let isPageFull = DB_NUM_OF_ITEMS % itemsPerPage ? 0 : 1;
-        if (pageNumber <= lastPageNum - isPageFull) {
-            modifyPageNumber(++pageNumber);
-            reloadProducts(itemsPerPage, false, false);
+        if (clickableToRight) {
+            clickableToRight = false;
+            let lastPageNum = Math.floor(DB_NUM_OF_ITEMS / itemsPerPage);
+            let isPageFull = DB_NUM_OF_ITEMS % itemsPerPage ? 0 : 1;
+            if (pageNumber <= lastPageNum - isPageFull) {
+                modifyPageNumber(++pageNumber);
+                reloadProducts(itemsPerPage, false, false);
+            }
+            setTimeout(function() {
+                clickableToRight = true;
+            }, 1000);
         }
     });
 
@@ -447,36 +478,36 @@ window.onload = function () {
     window.addEventListener('resize', (event) => {
         if (DB_NUM_OF_ITEMS == 1) {
             if (document.documentElement.clientWidth >= 1200) {
-                document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 2';
+                styleGridArea(0, 1, 2);
             } else if (document.documentElement.clientWidth < 1200) {
-                document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 1';
+                styleGridArea(0, 1, 1);
             }
         } else if (DB_NUM_OF_ITEMS == 2) {
             if (document.documentElement.clientWidth >= 1200) {
-                document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 2';
-                document.querySelector('#grid-products-wrapper').children[1].style.gridArea = '1 / 3';
+                styleGridArea(0, 1, 2);
+                styleGridArea(1, 1, 3);
             } else if (document.documentElement.clientWidth < 1200 && document.documentElement.clientWidth >= 500) {
-                document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 1';
-                document.querySelector('#grid-products-wrapper').children[1].style.gridArea = '1 / 2';
+                styleGridArea(0, 1, 1);
+                styleGridArea(1, 1, 2);
             } else if (document.documentElement.clientWidth < 500) {
-                document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 1';
-                document.querySelector('#grid-products-wrapper').children[1].style.gridArea = '2 / 1';
+                styleGridArea(0, 1, 1);
+                styleGridArea(1, 2, 1);
             }
         }
         if (itemsPerPage == 2 && document.documentElement.clientWidth >= 1200) {
-            document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 2';
+            styleGridArea(0, 1, 2);
             if (document.querySelector('#grid-products-wrapper').children.length == 2) {
-                document.querySelector('#grid-products-wrapper').children[1].style.gridArea = '1 / 3';
+                styleGridArea(1, 1, 3);
             }
         } else if (itemsPerPage == 2 && document.documentElement.clientWidth < 1200 && document.documentElement.clientWidth >= 500) {
-            document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 1';
+            styleGridArea(0, 1, 1);
             if (document.querySelector('#grid-products-wrapper').children.length == 2) {
-                document.querySelector('#grid-products-wrapper').children[1].style.gridArea = '1 / 2';
+                styleGridArea(1, 1, 2);
             }
         } else if (itemsPerPage == 2 && document.documentElement.clientWidth < 500) {
-            document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 1';
+            styleGridArea(0, 1, 1);
             if (document.querySelector('#grid-products-wrapper').children.length == 2) {
-                document.querySelector('#grid-products-wrapper').children[1].style.gridArea = '2 / 1';
+                styleGridArea(1, 2, 1);
             }
         }
     });
@@ -488,10 +519,10 @@ window.onload = function () {
             modifyPageNumber(1);
             modifyNumOfPages(Math.floor(DB_NUM_OF_ITEMS / itemsPerPage) + (DB_NUM_OF_ITEMS % itemsPerPage ? 1 : 0));
             if (DB_NUM_OF_ITEMS == 1 && document.documentElement.clientWidth >= 1200) {
-                document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 2';
+                styleGridArea(0, 1, 2);
             } else if (DB_NUM_OF_ITEMS == 2 && document.documentElement.clientWidth >= 1200) {
-                document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 2';
-                document.querySelector('#grid-products-wrapper').children[1].style.gridArea = '1 / 3';
+                styleGridArea(0, 1, 2);
+                styleGridArea(1, 1, 3);
             }
         }
     });
