@@ -252,9 +252,21 @@ window.onload = function () {
         document.querySelector('#dropdown-button').dataset.value = value;
     }
 
+    let resizeOptimalizationGreaterThan1200 = true;
+    let resizeOptimalizationGreaterThan500 = true;
+
+    let secondResizeOptimalizationGreaterThan1200 = true;
+    let secondResizeOptimalizationGreaterThan500 = true;
+
     if (document.documentElement.clientWidth < 1200) {
         itemsPerPage = 4;
         replaceValueInDropdown(4);
+        resizeOptimalizationGreaterThan1200 = false;
+        secondResizeOptimalizationGreaterThan1200 = false;
+        if (document.documentElement.clientWidth < 500) {
+            resizeOptimalizationGreaterThan500 = false;
+            secondResizeOptimalizationGreaterThan500 = false;
+        }
     }
 
     document.querySelector('#dropdown-button').addEventListener('click', (event) => {
@@ -319,7 +331,6 @@ window.onload = function () {
                     }
                  }, 500);
             } else {
-                console.log('im here');
                 let firstIndex = (oldPageNum - 1) * oldItemsPerPage + 1;
                 loadNewProducts(firstIndex, oldItemsPerPage);
                 if ((DB_NUM_OF_ITEMS - firstIndex) < 2 && document.documentElement.clientWidth >= 1200) {
@@ -475,6 +486,9 @@ window.onload = function () {
         }
     }
 
+    // I'LL REFACTOR CODE WRITTEN BELOW LATER
+    // NOW WORKING, BUT MAYBE IT NEEDS SOME OPTIMALIZATION
+    // i'm assuming that one operation on boolean is faster than few operations on integers (so i created variables like resizeOptimalizationGreaterThan1200)
     window.addEventListener('resize', (event) => {
         if (DB_NUM_OF_ITEMS == 1) {
             if (document.documentElement.clientWidth >= 1200) {
@@ -493,20 +507,55 @@ window.onload = function () {
                 styleGridArea(0, 1, 1);
                 styleGridArea(1, 2, 1);
             }
-        }
-        if (itemsPerPage == 2 && document.documentElement.clientWidth >= 1200) {
+        } else if (!secondResizeOptimalizationGreaterThan1200 && itemsPerPage == 2 && document.documentElement.clientWidth >= 1200) {
+            console.log('1200+');
+            secondResizeOptimalizationGreaterThan1200 = true;
+            secondResizeOptimalizationGreaterThan500 = true;    // necessary when resizing isn't smooth
             styleGridArea(0, 1, 2);
             if (document.querySelector('#grid-products-wrapper').children.length == 2) {
                 styleGridArea(1, 1, 3);
             }
-        } else if (itemsPerPage == 2 && document.documentElement.clientWidth < 1200 && document.documentElement.clientWidth >= 500) {
+        } else if ((secondResizeOptimalizationGreaterThan1200 || !secondResizeOptimalizationGreaterThan500) && itemsPerPage == 2 && document.documentElement.clientWidth < 1200 && document.documentElement.clientWidth >= 500) {
+            console.log('500-1200');
+            secondResizeOptimalizationGreaterThan1200 = false;
+            secondResizeOptimalizationGreaterThan500 = true;
             styleGridArea(0, 1, 1);
             if (document.querySelector('#grid-products-wrapper').children.length == 2) {
                 styleGridArea(1, 1, 2);
             }
-        } else if (itemsPerPage == 2 && document.documentElement.clientWidth < 500) {
+        } else if (secondResizeOptimalizationGreaterThan500 && itemsPerPage == 2 && document.documentElement.clientWidth < 500) {
+            console.log('500-');
+            secondResizeOptimalizationGreaterThan1200 = false;  // necessary when resizing isn't smooth
+            secondResizeOptimalizationGreaterThan500 = false;
             styleGridArea(0, 1, 1);
             if (document.querySelector('#grid-products-wrapper').children.length == 2) {
+                styleGridArea(1, 2, 1);
+            }
+        }  else if (!resizeOptimalizationGreaterThan1200 && document.documentElement.clientWidth >= 1200) {
+            resizeOptimalizationGreaterThan1200 = true;
+            resizeOptimalizationGreaterThan500 = true;  // necessary when resizing isn't smooth
+            if (DB_NUM_OF_ITEMS - ((pageNumber - 1) * itemsPerPage) == 1) {
+                styleGridArea(0, 1, 1);
+            } else if (DB_NUM_OF_ITEMS - ((pageNumber - 1) * itemsPerPage) == 2) {
+                styleGridArea(0, 1, 2);
+                styleGridArea(1, 1, 3);
+            }
+        } else if ((resizeOptimalizationGreaterThan1200 || !resizeOptimalizationGreaterThan500) && document.documentElement.clientWidth < 1200 && document.documentElement.clientWidth >= 500) {
+            resizeOptimalizationGreaterThan1200 = false;
+            resizeOptimalizationGreaterThan500 = true;
+            if (DB_NUM_OF_ITEMS - ((pageNumber - 1) * itemsPerPage) == 1) {
+                styleGridArea(0, 1, 1);
+            } else if (DB_NUM_OF_ITEMS - ((pageNumber - 1) * itemsPerPage) == 2) {
+                styleGridArea(0, 1, 1);
+                styleGridArea(1, 1, 2);
+            }
+        } else if (resizeOptimalizationGreaterThan500 && document.documentElement.clientWidth < 500) {
+            resizeOptimalizationGreaterThan1200 = false;    // necessary when resizing isn't smooth
+            resizeOptimalizationGreaterThan500 = false;
+            if (DB_NUM_OF_ITEMS - ((pageNumber - 1) * itemsPerPage) == 1) {
+                styleGridArea(0, 1, 1);
+            } else if (DB_NUM_OF_ITEMS - ((pageNumber - 1) * itemsPerPage) == 2) {
+                styleGridArea(0, 1, 1);
                 styleGridArea(1, 2, 1);
             }
         }
