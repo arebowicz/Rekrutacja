@@ -290,6 +290,7 @@ section h2::after {
 
 #dropdown-button:hover {
     background-color: rgb(145, 35, 35);
+    transition: background-color ease 0.5s;
 }
 
 #dropdown-items {
@@ -310,6 +311,7 @@ section h2::after {
 
 #dropdown-items > div:hover {
     background-color: var(--red);
+    transition: background-color ease 0.5s;
 }
 
 .hide-dropdown {
@@ -339,7 +341,11 @@ section h2::after {
     opacity: 0;
 }
 
-.appear-width {
+.hide-with-opacity {
+    opacity: 0;
+}
+
+.appear-with-opacity {
     opacity: 1;
 }
 

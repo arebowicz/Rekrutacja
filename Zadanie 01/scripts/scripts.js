@@ -243,7 +243,7 @@ window.onload = function () {
 
 
 
-    const DB_NUM_OF_ITEMS = 64;
+    const DB_NUM_OF_ITEMS = 50;
     let itemsPerPage = 8;
     let pageNumber = 1;
 
@@ -283,42 +283,113 @@ window.onload = function () {
     }
 
     function calcNewPageNumber(newItemsPerPage) {
-        let newAllPagesNumber = Math.floor(DB_NUM_OF_ITEMS / newItemsPerPage) + (DB_NUM_OF_ITEMS % newItemsPerPage ? 1 : 0);
         let firstItemIndex = (pageNumber - 1) * itemsPerPage + 1;
-        console.log(firstItemIndex);
-        let newPageNumber = Math.floor(firstItemIndex / newItemsPerPage) + 1;
         itemsPerPage = newItemsPerPage;
-        pageNumber = newPageNumber;
-        modifyPageNumber(newPageNumber);
-        modifyNumOfPages(newAllPagesNumber);
+        pageNumber = Math.floor(firstItemIndex / newItemsPerPage) + 1;
+        modifyPageNumber(pageNumber);
+        modifyNumOfPages(Math.floor(DB_NUM_OF_ITEMS / newItemsPerPage) + (DB_NUM_OF_ITEMS % newItemsPerPage ? 1 : 0));
     }
 
-    function reloadProducts(newItemsPerPage, ifResizingTable) {
-        while (products.firstChild) {
-            // removeEventListener('click', functionName);
-            products.removeChild(products.lastChild);
-        }
+    function reloadProducts(newItemsPerPage, ifResizingTable, fromLastPageToLeft) {
         if (ifResizingTable) {
-            calcNewPageNumber(newItemsPerPage);
+            let oldItemsPerPage = itemsPerPage;
+            let oldPageNum = pageNumber;
+            calcNewPageNumber(newItemsPerPage); // from now: newItemsPerPage == itemsPerPage
             replaceValueInDropdown(itemsPerPage);
+            let ifLastPageIsIncomplete = oldPageNum * oldItemsPerPage > DB_NUM_OF_ITEMS ? 1 : 0;
+            if (itemsPerPage < oldItemsPerPage) {
+                for (let i = oldItemsPerPage - (ifLastPageIsIncomplete * (oldPageNum * oldItemsPerPage - DB_NUM_OF_ITEMS)); i > itemsPerPage; i--) {
+                    products.children[i-1].classList.remove('appear-with-opacity');
+                    products.children[i-1].classList.add('hide-with-opacity');
+                }
+                setTimeout(function() { 
+                    for (let i = oldItemsPerPage - (ifLastPageIsIncomplete * (oldPageNum * oldItemsPerPage - DB_NUM_OF_ITEMS)); i > itemsPerPage; i--) {
+                        // remember to add remove event listener
+                        products.removeChild(products.lastChild);
+                    }
+                    if (itemsPerPage == 2 && document.documentElement.clientWidth >= 1200) {
+                        document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 2';
+                        if (document.querySelector('#grid-products-wrapper').children.length == 2) {
+                            document.querySelector('#grid-products-wrapper').children[1].style.gridArea = '1 / 3';
+                        }
+                    }
+                 }, 500);
+            } else {
+                let firstIndex = (oldPageNum - 1) * oldItemsPerPage + 1;
+                loadNewProducts(firstIndex, oldItemsPerPage);
+            }
+        } else {    // logic only for changing page of products
+            if (fromLastPageToLeft) {
+                for (let i = 1; i <= (DB_NUM_OF_ITEMS - (pageNumber * itemsPerPage)); i++) {
+                    products.children[i-1].classList.remove('appear-with-opacity');
+                    products.children[i-1].classList.add('hide-with-opacity');
+                }
+            } else {
+                for (let i = 1; i <= itemsPerPage; i++) {
+                    products.children[i-1].classList.remove('appear-with-opacity');
+                    products.children[i-1].classList.add('hide-with-opacity');
+                }
+            }
+            setTimeout(function() {
+                while (products.firstChild) {
+                    // remember to add remove event listener
+                    products.removeChild(products.lastChild);
+                }
+                loadNewProducts((pageNumber - 1) * itemsPerPage + 1, 0);
+                if (itemsPerPage == 2 && document.documentElement.clientWidth >= 1200) {
+                    document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 2';
+                    if (document.querySelector('#grid-products-wrapper').children.length == 2) {
+                        document.querySelector('#grid-products-wrapper').children[1].style.gridArea = '1 / 3';
+                    }
+                } else if ((DB_NUM_OF_ITEMS - ((pageNumber - 1) * itemsPerPage)) == 1 && document.documentElement.clientWidth >= 1200) {
+                    document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 2';
+                } else if ((DB_NUM_OF_ITEMS - ((pageNumber - 1) * itemsPerPage)) == 2 && document.documentElement.clientWidth >= 1200) {
+                    document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 2';
+                    document.querySelector('#grid-products-wrapper').children[1].style.gridArea = '1 / 3';
+                }
+            }, 500);
         }
-        loadNewProducts();
+    }
+
+    function twoCenteredGridItemsAssistant(newItemsPerPage) {
+        if (itemsPerPage == 2 && document.documentElement.clientWidth >= 1200) {
+            if (DB_NUM_OF_ITEMS == 1) {
+                document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 2';
+            } else if (DB_NUM_OF_ITEMS == 2) {
+                document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 2';
+                document.querySelector('#grid-products-wrapper').children[1].style.gridArea = '1 / 3';
+            } else if (DB_NUM_OF_ITEMS > 2) {
+                let indexOfPair = (pageNumber - 1) * itemsPerPage + 1;
+                let newPageNumber = Math.floor(indexOfPair / newItemsPerPage) + 1;
+                let firstIndex = (newPageNumber - 1) * newItemsPerPage + 1;
+                let itemsBeforePair = (indexOfPair - firstIndex) % newItemsPerPage;
+                let firstItemRow = Math.floor((itemsBeforePair + 1) / 4) + 1;
+                let firstItemColumn = itemsBeforePair % 4 + 1;
+                document.querySelector('#grid-products-wrapper').children[0].style.gridArea = `${firstItemRow} / ${firstItemColumn}`;
+                if (document.querySelector('#grid-products-wrapper').children.length == 2) {
+                    document.querySelector('#grid-products-wrapper').children[1].style.gridArea = `${firstItemRow} / ${firstItemColumn + 1}`;
+                }
+            }
+        }
     }
 
     document.querySelector('#dropdown-items').addEventListener('click', (event) => {
         if (event.target.dataset.value != document.querySelector('#dropdown-button').dataset.value) {
             switch (event.target.id) {
                 case 'dropdown-item1':
-                    reloadProducts(2, true);
+                    reloadProducts(2, true, false);
                     break;
                 case 'dropdown-item2':
-                    reloadProducts(4, true);
+                    twoCenteredGridItemsAssistant(4);
+                    reloadProducts(4, true, false);
                     break;
                 case 'dropdown-item3':
-                    reloadProducts(8, true);
+                    twoCenteredGridItemsAssistant(8);
+                    reloadProducts(8, true, false);
                     break;
                 case 'dropdown-item4':
-                    reloadProducts(16, true);
+                    twoCenteredGridItemsAssistant(16);
+                    reloadProducts(16, true, false);
                     break;
             }
         }
@@ -327,7 +398,7 @@ window.onload = function () {
     document.querySelector('#pages-left-icon').addEventListener('click', (event) => {
         if (pageNumber > 1) {
             modifyPageNumber(--pageNumber);
-            reloadProducts(itemsPerPage, false);
+            reloadProducts(itemsPerPage, false, true);
         }
     });
 
@@ -336,37 +407,92 @@ window.onload = function () {
         let isPageFull = DB_NUM_OF_ITEMS % itemsPerPage ? 0 : 1;
         if (pageNumber <= lastPageNum - isPageFull) {
             modifyPageNumber(++pageNumber);
-            reloadProducts(itemsPerPage, false);
+            reloadProducts(itemsPerPage, false, false);
         }
     });
-
-
 
     let firstLoaded = false;
     const distance = document.querySelector('#products').getBoundingClientRect().top;
 
-    function loadNewProducts() {
+    function createNewGridItem(itemIndex) {
+        let newGridItem = document.createElement('div');
+        newGridItem.classList.add('grid-products-item');
+        newGridItem.setAttribute('data-id', 0);
+        newGridItem.setAttribute('data-name', 0);
+        newGridItem.setAttribute('data-value', 0);
+        newGridItem.appendChild(document.createTextNode(`index: ${itemIndex}`));
+        return newGridItem;
+    }
+
+    function loadNewProducts(firstIndex, offset) {
         // TODO: better if condition
-        if (pageNumber * itemsPerPage <= DB_NUM_OF_ITEMS) {
-            for (let i = 0; i < itemsPerPage; i++) {
-                let newItem = document.createElement('div');
-                newItem.classList.add('grid-products-item');
-                newItem.setAttribute('data-id', 0);
-                newItem.setAttribute('data-name', 0);
-                newItem.setAttribute('data-value', 0);
-                newItem.appendChild(document.createTextNode(`index: ${(pageNumber - 1) * itemsPerPage + (i + 1)}`));
-                products.appendChild(newItem);
-                setTimeout(function(){ newItem.classList.add('appear-width') }, 100);
+        let ifLastPageIsIncomplete = pageNumber * itemsPerPage > DB_NUM_OF_ITEMS ? 1 : 0;
+        if ((pageNumber * itemsPerPage)  <=  DB_NUM_OF_ITEMS + (ifLastPageIsIncomplete * itemsPerPage)) {
+            for (let i = firstIndex - 1; i >= (pageNumber - 1) * itemsPerPage + 1; i--) {
+                // what about ifLastPageIsIncomplete? well... it can't happen
+                products.insertBefore(createNewGridItem(i), products.firstChild);
             }
+            for (let i = firstIndex + offset; i <= pageNumber * itemsPerPage - (ifLastPageIsIncomplete * (pageNumber * itemsPerPage - DB_NUM_OF_ITEMS)); i++) {
+                products.appendChild(createNewGridItem(i));
+            }
+            setTimeout(function() {
+                for (let i = 0; i < itemsPerPage - (ifLastPageIsIncomplete * (pageNumber * itemsPerPage - DB_NUM_OF_ITEMS)); i++) {
+                    products.children[i].classList.add('appear-with-opacity');
+                }
+                
+            }, 100);
         }
     }
+
+    window.addEventListener('resize', (event) => {
+        if (DB_NUM_OF_ITEMS == 1) {
+            if (document.documentElement.clientWidth >= 1200) {
+                document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 2';
+            } else if (document.documentElement.clientWidth < 1200) {
+                document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 1';
+            }
+        } else if (DB_NUM_OF_ITEMS == 2) {
+            if (document.documentElement.clientWidth >= 1200) {
+                document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 2';
+                document.querySelector('#grid-products-wrapper').children[1].style.gridArea = '1 / 3';
+            } else if (document.documentElement.clientWidth < 1200 && document.documentElement.clientWidth >= 500) {
+                document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 1';
+                document.querySelector('#grid-products-wrapper').children[1].style.gridArea = '1 / 2';
+            } else if (document.documentElement.clientWidth < 500) {
+                document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 1';
+                document.querySelector('#grid-products-wrapper').children[1].style.gridArea = '2 / 1';
+            }
+        }
+        if (itemsPerPage == 2 && document.documentElement.clientWidth >= 1200) {
+            document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 2';
+            if (document.querySelector('#grid-products-wrapper').children.length == 2) {
+                document.querySelector('#grid-products-wrapper').children[1].style.gridArea = '1 / 3';
+            }
+        } else if (itemsPerPage == 2 && document.documentElement.clientWidth < 1200 && document.documentElement.clientWidth >= 500) {
+            document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 1';
+            if (document.querySelector('#grid-products-wrapper').children.length == 2) {
+                document.querySelector('#grid-products-wrapper').children[1].style.gridArea = '1 / 2';
+            }
+        } else if (itemsPerPage == 2 && document.documentElement.clientWidth < 500) {
+            document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 1';
+            if (document.querySelector('#grid-products-wrapper').children.length == 2) {
+                document.querySelector('#grid-products-wrapper').children[1].style.gridArea = '2 / 1';
+            }
+        }
+    });
 
     window.addEventListener('scroll', (e) => {
         if (!firstLoaded && (window.scrollY + window.innerHeight >= distance)) {
             firstLoaded = true;
-            loadNewProducts();
+            loadNewProducts(1, 0);
             modifyPageNumber(1);
             modifyNumOfPages(Math.floor(DB_NUM_OF_ITEMS / itemsPerPage) + (DB_NUM_OF_ITEMS % itemsPerPage ? 1 : 0));
+            if (DB_NUM_OF_ITEMS == 1 && document.documentElement.clientWidth >= 1200) {
+                document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 2';
+            } else if (DB_NUM_OF_ITEMS == 2 && document.documentElement.clientWidth >= 1200) {
+                document.querySelector('#grid-products-wrapper').children[0].style.gridArea = '1 / 2';
+                document.querySelector('#grid-products-wrapper').children[1].style.gridArea = '1 / 3';
+            }
         }
     });
 
