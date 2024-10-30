@@ -459,6 +459,7 @@ window.onload = function () {
     function createNewGridItem(itemIndex) {
         let newGridItem = document.createElement('div');
         newGridItem.classList.add('grid-products-item');
+        newGridItem.classList.add('noselect');
         newGridItem.setAttribute('data-id', 0);
         newGridItem.setAttribute('data-name', 0);
         newGridItem.setAttribute('data-value', 0);
@@ -508,7 +509,6 @@ window.onload = function () {
                 styleGridArea(1, 2, 1);
             }
         } else if (!secondResizeOptimalizationGreaterThan1200 && itemsPerPage == 2 && document.documentElement.clientWidth >= 1200) {
-            console.log('1200+');
             secondResizeOptimalizationGreaterThan1200 = true;
             secondResizeOptimalizationGreaterThan500 = true;    // necessary when resizing isn't smooth
             styleGridArea(0, 1, 2);
@@ -516,7 +516,6 @@ window.onload = function () {
                 styleGridArea(1, 1, 3);
             }
         } else if ((secondResizeOptimalizationGreaterThan1200 || !secondResizeOptimalizationGreaterThan500) && itemsPerPage == 2 && document.documentElement.clientWidth < 1200 && document.documentElement.clientWidth >= 500) {
-            console.log('500-1200');
             secondResizeOptimalizationGreaterThan1200 = false;
             secondResizeOptimalizationGreaterThan500 = true;
             styleGridArea(0, 1, 1);
@@ -524,7 +523,6 @@ window.onload = function () {
                 styleGridArea(1, 1, 2);
             }
         } else if (secondResizeOptimalizationGreaterThan500 && itemsPerPage == 2 && document.documentElement.clientWidth < 500) {
-            console.log('500-');
             secondResizeOptimalizationGreaterThan1200 = false;  // necessary when resizing isn't smooth
             secondResizeOptimalizationGreaterThan500 = false;
             styleGridArea(0, 1, 1);
@@ -573,6 +571,66 @@ window.onload = function () {
                 styleGridArea(0, 1, 2);
                 styleGridArea(1, 1, 3);
             }
+        }
+    });
+
+
+
+    function toggleBodyOverflow() {
+        // if (!document.body.style.overflow) {    // == ''  <- empty string
+        //     document.body.style.overflow = 'hidden';
+        // } else if (document.body.style.overflow == 'hidden') {
+        //     document.body.style.overflow = '';
+        // }
+        // let's make a simple shortcut:
+        document.body.style.overflow = (!document.body.style.overflow) ? 'hidden' : '';
+    }
+
+    function togglePopupProperties(popup) {
+        if (popup.style.display == 'flex') {
+            popup.classList.remove('popup-opacity');
+            setTimeout(function() {
+                popup.style.display = 'none';
+                popup.style.justifyContent = 'auto';
+            }, 510);
+        } else {
+            popup.style.display = 'flex';
+            popup.style.justifyContent = 'center';
+            // don't really understand why but it looks like there need to be some extra time space (without which one it isn't working at all)
+            setTimeout(function() {
+                popup.classList.add('popup-opacity');
+            }, 10);
+        }
+    }
+
+    // by default: no popup is open
+    let waitToClose = true;     // user have to wait 1250ms to close popup
+    let popupOpened = false;    // user have to wait 750ms to open second popup (but there is 500ms opacity transition so in fact only 250ms)
+    // this will also prevent user from fething more data from API at one time
+
+    document.querySelector('#grid-products-wrapper').addEventListener('click', (event) => {
+        if (event.target.classList.contains('grid-products-item')) {
+            if (!popupOpened) {
+                popupOpened = true;
+                waitToClose = true;
+                let popup = document.querySelector('#product-popup');
+                toggleBodyOverflow();
+                togglePopupProperties(popup);
+                setTimeout(function() {
+                    waitToClose = false;
+                }, 1250);
+            }
+        }
+    });
+
+    document.querySelector('.popup-close').addEventListener('click', (event) => {
+            if (!waitToClose) {
+                waitToClose = true;
+                togglePopupProperties(event.target.closest('#product-popup'));
+                toggleBodyOverflow();
+                setTimeout(function() {
+                    popupOpened = false;
+                }, 750);
         }
     });
 
