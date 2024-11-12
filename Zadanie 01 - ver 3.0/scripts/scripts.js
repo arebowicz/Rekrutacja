@@ -42,7 +42,7 @@ window.addEventListener('scroll', (e) => {
     let scrollY = window.scrollY;
     sections.forEach((current) => {
         const sectionHeight = current.offsetHeight;
-        const sectionTop = current.offsetTop - 70;  // 70 is ~ height (in 'px') of header
+        const sectionTop = current.offsetTop - 80;  // 80 is height (in 'px') of header + some margin offset
         const sectionId = current.getAttribute("id");
         if ((scrollY > sectionTop) && (scrollY <= sectionTop + sectionHeight)) {
             document.querySelector("#nav-" + sectionId + "-item").classList.add("active");
@@ -79,6 +79,26 @@ document.querySelector('#stand-out .section-content').addEventListener('mouseout
             document.querySelector('.stand-out-img.stand-out-comfort .stand-out-underline').style.opacity = '0';
         } else if (event.target.closest('.stand-out-efficiency')) {
             document.querySelector('.stand-out-img.stand-out-efficiency .stand-out-underline').style.opacity = '0';
+        }
+    }
+});
+
+// the same rule as in above case
+
+document.querySelector('#ingredients .section-content').addEventListener('mouseover', (event) => {
+    if (document.documentElement.clientWidth >= 768) {
+        let item = event.target.closest('.ingredients-item');
+        if (item) {
+            item.querySelector('h4').style.textDecorationColor = 'black';
+        }
+    }
+});
+
+document.querySelector('#ingredients .section-content').addEventListener('mouseout', (event) => {
+    if (document.documentElement.clientWidth >= 768) {
+        let item = event.target.closest('.ingredients-item');
+        if (item) {
+            item.querySelector('h4').style.textDecorationColor = 'transparent';
         }
     }
 });
