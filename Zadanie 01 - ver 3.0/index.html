@@ -175,7 +175,54 @@
                     </p>
                 </div>
             </div>
+            <div id="ingredients-img-footer">
+                <img src="images/products-dog.png" alt="Pies">
+            </div>
         </section>
+    </div>
+    <div class="bg-one-color-wrapper">
+        <div class="body-wrapper">
+            <section id="products">
+                <h2>Produkty</h2>
+                <div id="products-per-page" class="noselect">
+                    <div id="dropdown-button-wrapper">
+                        <div id="num-of-products-per-page-text">liczba produktów na stronie</div>
+                        <button id="dropdown-button" data-value="8">8 <img src="images/icons/dropdown-icon.png" alt="Dropdown icon"></button>
+                    </div>
+                    <div id="dropdown-items" class="hide-dropdown">
+                        <div id="dropdown-item1" data-value="8">8</div>
+                        <div id="dropdown-item2" data-value="16">16</div>
+                        <div id="dropdown-item3" data-value="32">32</div>
+                    </div>
+                </div>
+                <div id="product-popup" class="popup-wrapper">
+                    <div class="popup-content-box">
+                        <div class="popup-title-wrapper">
+                            <h3>
+                                <span class="noselect">ID: </span>
+                                <span id="inject-popup-id"></span>
+                            </h3>
+                            <h3>
+                                <span class="popup-close noselect">&times;</span>
+                            </h3>
+                        </div>
+                        <div class="popup-content-wrapper">
+                            <div class="popup-name">
+                                <h4><span class="popup-name-label noselect">Nazwa: </span></h4>
+                                <span id="inject-popup-name"></span>
+                            </div>
+                            <div class="popup-value">
+                                <h4><span class="popup-value-label noselect">Wartość: </span></h4>
+                                <span id="inject-popup-value"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="section-content">
+                    <!-- data loaded dynamically (see: scripts.js)  -->
+                </div>
+            </section>
+        </div>
     </div>
     <script src="scripts/scripts.js"></script>
 </body>
